@@ -54,5 +54,5 @@ def takeimage():
     name = "hello"
     print(name)
     _, frame = video.read()
-    cv2.imwrite(f'{name}.jpg', frame)
+    cv2.imwrite('/Users/nicolasbovet/OneDrive - Université de Fribourg/Project python/PMF_project/client/src/assets/salut.jpg', frame)
     return Response(status = 200)

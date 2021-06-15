@@ -2,6 +2,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Ping from '../components/Ping.vue';
 import Index from '../components/index.vue';
+import ViewImg from '../components/view_img.vue';
 
 Vue.use(VueRouter);
 
@@ -15,6 +16,11 @@ const routes = [
   path: '/ping',
   name: 'Ping',
   component: Ping,
+  },
+  {
+  path: '/view_img',
+  name: 'View_Img',
+  component: ViewImg,
   },
 ];
 

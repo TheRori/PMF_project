@@ -1,7 +1,9 @@
 <template>
 <div>
   <img src="http://localhost:5000/video_feed" width="600px">
-  <button v-on:click="takeimage">helOOOO</button>
+  <router-link to="/view_img"><span v-on:click="takeimage">Take a picture</span></router-link>
+  <br>
+  <router-link to="/">Back to home</router-link>
 </div>
 </template>
 

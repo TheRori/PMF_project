@@ -1,5 +1,7 @@
 <template>
-<router-link to="/ping">Go to Ping</router-link>
+<div>
+<router-link to="/ping">Take a pic</router-link>
+</div>
 </template>
 <script>
 export default {
