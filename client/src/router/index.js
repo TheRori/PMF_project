@@ -11,16 +11,17 @@ const routes = [
     path: '/',
     name: 'index',
     component: Index,
+    alias: '/index',
   },
   {
-  path: '/ping',
-  name: 'Ping',
-  component: Ping,
+    path: '/ping',
+    name: 'Ping',
+    component: Ping,
   },
   {
-  path: '/view_img',
-  name: 'View_Img',
-  component: ViewImg,
+    path: '/view_img',
+    name: 'View_Img',
+    component: ViewImg,
   },
 ];
 
