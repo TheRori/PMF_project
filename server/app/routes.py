@@ -23,6 +23,8 @@ BOOKS = [
     }
 ]
 
+video = cv2.VideoCapture(0)
+
 
 @app.route('/', methods=['GET'])
 @app.route('/index')
@@ -34,7 +36,7 @@ def index():
     )
 
 
-def gen(video):
+def gen():
     """Video streaming generator function."""
     while True:
         rval, frame = video.read()
@@ -45,16 +47,14 @@ def gen(video):
 
 @app.route('/video_feed', methods=['GET'])
 def video_feed():
-    video = cv2.VideoCapture(0)
     """Video streaming route. Put this in the src attribute of an img tag."""
-    return Response(gen(video), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/takeimage', methods=['POST', 'GET'])
 def takeimage():
-    video = cv2.VideoCapture(0)
     _, frame = video.read()
-    cv2.imwrite('/Users/nicolasbovet/Documents/pmf_project/client/src/assets/salut.jpg', frame)
+    cv2.imwrite('../../client/src/assets/salut.jpg', frame)
     return Response(status=200)
 
 
