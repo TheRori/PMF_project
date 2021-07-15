@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM jjanzic/docker-python3-opencv
+FROM python:3
 
 WORKDIR /server
 

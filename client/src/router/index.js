@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import Ping from '../components/Ping.vue';
+import stream from '../components/stream.vue';
 import Index from '../components/index.vue';
 import ViewImg from '../components/view_img.vue';
 
@@ -14,9 +14,9 @@ const routes = [
     alias: '/index',
   },
   {
-    path: '/ping',
-    name: 'Ping',
-    component: Ping,
+    path: '/stream',
+    name: 'Stream',
+    component: stream,
   },
   {
     path: '/view_img',
