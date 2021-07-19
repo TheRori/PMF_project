@@ -32,7 +32,7 @@ export default {
         });
     },
     getMessage() {
-      const path = 'http://localhost:5000/video_feed';
+      const path = '/video_feed';
       axios.get(path)
         .then((res) => {
           this.msg = res.data;

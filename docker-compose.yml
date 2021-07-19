@@ -5,11 +5,16 @@ services:
   server:
 
     build: server/
+    
+    volumes:
+      - ${PWD}:${PWD}
 
     
     ports:
       - 5000:5000
       
+      
+    privileged: true  
       
   client:
 
@@ -24,3 +29,5 @@ services:
 
     depends_on:
       - server
+      
+    privileged: true
