@@ -28,7 +28,7 @@ export default {
   data() {
     return {
       ctx: null,
-      widthCanvas: 800,
+      widthCanvas: process.env.VUE_APP_WIDTH,
       selectionMode: false,
       zoneSelectedText: [],
       zoneMode: 'action',
@@ -164,7 +164,9 @@ export default {
           this.ctx.strokeStyle = 'blue';
         }
         this.ctx.closePath();
-        this.ctx.stroke();
+        if (Math.abs(this.rect.h * this.rect.w > 40)) {
+          this.ctx.stroke();
+        }
         this.drawOldRects();
       }
     },
@@ -189,12 +191,14 @@ export default {
       }
     },
     stopSelect() {
-      this.startPosition.x.push(this.rect.startX);
-      this.startPosition.y.push(this.rect.startY);
-      this.startPosition.w.push(this.rect.w);
-      this.startPosition.h.push(this.rect.h);
-      this.startPosition.type.push(this.zoneMode);
-      this.startPosition.selected.push(false);
+      if (Math.abs(this.rect.w * this.rect.h > 40)) {
+        this.startPosition.x.push(this.rect.startX);
+        this.startPosition.y.push(this.rect.startY);
+        this.startPosition.w.push(this.rect.w);
+        this.startPosition.h.push(this.rect.h);
+        this.startPosition.type.push(this.zoneMode);
+        this.startPosition.selected.push(false);
+      }
       this.selectionMode = false;
     },
   },

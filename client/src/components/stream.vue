@@ -31,20 +31,6 @@ export default {
           console.error(error);
         });
     },
-    getMessage() {
-      const path = '/video_feed';
-      axios.get(path)
-        .then((res) => {
-          this.msg = res.data;
-        })
-        .catch((error) => {
-          // eslint-disable-next-line
-          console.error(error);
-        });
-    },
-  },
-  created() {
-    this.getMessage();
   },
 };
 </script>

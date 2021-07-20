@@ -1,7 +1,6 @@
-import os
-
 from flask import jsonify, Response, request
 
+import os
 from app import app
 import cv2
 import json
@@ -14,7 +13,11 @@ class VideoCamera(object):
         self.video = cv2.VideoCapture(0)
 
     def __del__(self):
-        self.video.release()
+        try:
+            self.video.release()
+        except:
+            print('probably there\'s no cap yet :(')
+        cv2.destroyAllWindows()
 
     def get_frame(self):
         success, image = self.video.read()
@@ -28,7 +31,7 @@ class VideoCamera(object):
         return Response(status=200)
 
 
-cam = VideoCamera()
+cam = None
 
 
 @app.route('/', methods=['GET'])
@@ -47,6 +50,8 @@ def gen(camera):
 
 @app.route('/video_feed', methods=['GET'])
 def video_feed():
+    global cam
+    cam = VideoCamera()
     return Response(gen(cam),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -61,21 +66,23 @@ def takeimage():
 def saveZones():
     data = request.get_json()
     print('hello')
-    zones = {}
-    zones['zone'] = []
+    zones = {'zone': []}
     for i in range(len(data['x'])):
         zones['zone'].append({'ID': i, 'X': data['x'][i], 'Y': data['y'][i], 'W': data['w'][i], 'H': data['h'][i],
                               'Zone': data['type'][i]})
-    with open('zones.txt', 'w') as outfile:
+    with open('zones.json', 'w') as outfile:
         json.dump(zones, outfile)
+    img = cv2.imread('screen.jpg')
+    img[:] = (255, 255, 255)
+    cv2.imwrite('screen.jpg', img)
+    global cam
+    del cam
     return Response(status=200)
 
 
 @app.route('/readzones', methods=['GET'])
 def readZones():
     zones = {}
-    with open('zones.txt') as json_file:
+    with open('zones.json') as json_file:
         data = json.load(json_file)
     return jsonify(data)
-
-
