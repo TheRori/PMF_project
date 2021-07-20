@@ -7,25 +7,6 @@ import cv2
 import json
 
 
-BOOKS = [
-    {
-        'title': 'On the Road',
-        'author': 'Jack Kerouac',
-        'r': True
-    },
-    {
-        'title': 'Harry Potter and the Philosopher\'s Stone',
-        'author': 'J. K. Rowling',
-        'r': False
-    },
-    {
-        'title': 'Green Eggs and Ham',
-        'author': 'Dr. Seuss',
-        'r': True
-    }
-]
-
-
 class VideoCamera(object):
     def __init__(self):
         # Get real-time video stream through opencv
@@ -47,13 +28,13 @@ class VideoCamera(object):
         return Response(status=200)
 
 
+cam = VideoCamera()
+
+
 @app.route('/', methods=['GET'])
 @app.route('/index')
 def index():
-    m = BOOKS
-    return jsonify(
-        m
-    )
+    return 'hello pmf'
 
 
 def gen(camera):
@@ -66,15 +47,13 @@ def gen(camera):
 
 @app.route('/video_feed', methods=['GET'])
 def video_feed():
-    return Response(gen(VideoCamera()),
+    return Response(gen(cam),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/takeimage', methods=['POST', 'GET'])
 def takeimage():
-    cam = VideoCamera()
     cam.take_picture()
-    del cam
     return Response(status=200)
 
 
