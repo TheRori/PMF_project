@@ -21,7 +21,7 @@
 
 <script>
 import axios from 'axios';
-import myImg from '../../../server/salut.jpg';
+import myImg from '../../../server/screen.jpg';
 
 export default {
   name: 'view_img',

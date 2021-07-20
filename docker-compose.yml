@@ -7,7 +7,7 @@ services:
     build: server/
     
     volumes:
-      - ${PWD}:${PWD}
+       - ./server:/server
 
     
     ports:
@@ -30,4 +30,3 @@ services:
     depends_on:
       - server
       
-    privileged: true

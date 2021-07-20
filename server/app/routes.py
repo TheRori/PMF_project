@@ -42,7 +42,7 @@ class VideoCamera(object):
 
     def take_picture(self):
         _, frame = self.video.read()
-        cv2.imwrite('salut.jpg', frame)
+        cv2.imwrite('screen.jpg', frame)
 
         return Response(status=200)
 
