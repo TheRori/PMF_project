@@ -1,9 +1,10 @@
 from flask import jsonify, Response, request
-
+from pathlib import Path
 import os
 from app import app
 import cv2
 import json
+from shutil import copy2
 
 
 class VideoCamera(object):
@@ -58,31 +59,90 @@ def video_feed():
 
 @app.route('/takeimage', methods=['POST', 'GET'])
 def takeimage():
+    global cam
     cam.take_picture()
+    del cam
     return Response(status=200)
 
 
-@app.route('/savezones', methods=['POST'])
+@app.route('/savezones', methods=['GET', 'POST'])
 def saveZones():
-    data = request.get_json()
-    print('hello')
+    d = request.get_json()
+    print(d)
+    data = d['zones']
+    folder = d['folder']
+    print(folder)
+    Path('store/' + folder).mkdir(parents=True, exist_ok=True)
     zones = {'zone': []}
     for i in range(len(data['x'])):
-        zones['zone'].append({'ID': i, 'X': data['x'][i], 'Y': data['y'][i], 'W': data['w'][i], 'H': data['h'][i],
-                              'Zone': data['type'][i]})
-    with open('zones.json', 'w') as outfile:
+        zones['zone'].append({'ID': i, 'Name': data['name'][i], 'X': data['x'][i],
+                              'Y': data['y'][i], 'W': data['w'][i], 'H': data['h'][i],
+                              'Z': data['z'][i], 'Zone': data['type'][i]})
+    with open('store/' + folder + '/zones.json', 'w') as outfile:
         json.dump(zones, outfile)
+    return Response(status=200)
+
+
+@app.route('/save_scenario', methods=['POST'])
+def saveScenario():
+    d = request.get_json()
+    data = d['scenario']
+    folder = d['folder']
+    with open('store/' + folder + '/scenario.json', 'w') as outfile:
+        json.dump(data, outfile)
+    try:
+        copy2('screen.jpg', 'store/' + folder)
+    except IOError:
+        os.chmod('app/', 777)  # ?? still can raise exception
+        copy2('screen.jpg', 'store/' + folder)
+    return Response(status=200)
+
+
+@app.route('/reinit_img', methods=['GET'])
+def reinit_img():
+    try:
+        copy2('screen.jpg', 'app/')
+    except IOError:
+        os.chmod('app/', 777)  # ?? still can raise exception
+        copy2('screen.jpg', '/app')
     img = cv2.imread('screen.jpg')
     img[:] = (255, 255, 255)
     cv2.imwrite('screen.jpg', img)
-    global cam
-    del cam
+    return Response(status=200)
+
+
+@app.route('/load_img', methods=['GET'])
+def load_img():
+    folder = request.args.get('folder', '')
+    print(folder)
+    os.remove('screen.jpg')
+    try:
+        copy2('store/' + folder + '/screen.jpg', os.curdir)
+    except IOError:
+        copy2('store/' + folder + '/screen.jpg', os.curdir)
     return Response(status=200)
 
 
 @app.route('/readzones', methods=['GET'])
 def readZones():
+    folder = request.args.get('folder', '')
     zones = {}
-    with open('zones.json') as json_file:
+    with open('store/' + folder + '/zones.json') as json_file:
         data = json.load(json_file)
     return jsonify(data)
+
+
+@app.route('/readscenario', methods=['GET'])
+def readScenario():
+    folder = request.args.get('folder', '')
+    zones = {}
+    with open('store/' + folder + '/scenario.json') as json_file:
+        data = json.load(json_file)
+    return jsonify(data)
+
+
+@app.route('/get_project_names', methods=['GET'])
+def getProjectNames():
+    names = os.listdir('store/')
+    return jsonify(names)
+

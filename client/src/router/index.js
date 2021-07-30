@@ -19,7 +19,7 @@ const routes = [
     component: stream,
   },
   {
-    path: '/view_img',
+    path: '/view_img/:load',
     name: 'View_Img',
     component: ViewImg,
   },
