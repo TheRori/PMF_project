@@ -68,16 +68,23 @@ def takeimage():
 @app.route('/savezones', methods=['GET', 'POST'])
 def saveZones():
     d = request.get_json()
-    print(d)
     data = d['zones']
+    z1, z2 = [], []
+    with open('app/static/settings.json') as json_file:
+        dd = json.load(json_file)
+    for a in dd['levels']:
+        z1.append(a['z1'])
+        z2.append(a['z2'])
+
     folder = d['folder']
-    print(folder)
     Path('store/' + folder).mkdir(parents=True, exist_ok=True)
     zones = {'zone': []}
     for i in range(len(data['x'])):
+        z1_curr = z1[data['z'][i]]
+        z2_curr = z2[data['z'][i]]
         zones['zone'].append({'ID': i, 'Name': data['name'][i], 'X': data['x'][i],
-                              'Y': data['y'][i], 'W': data['w'][i], 'H': data['h'][i],
-                              'Z': data['z'][i], 'Zone': data['type'][i]})
+                              'Y': data['y'][i], 'W': data['w'][i], 'H': data['h'][i], 'Lvl': data['z'][i],
+                              'Z1': z1_curr, 'Z2': z2_curr, 'Type': data['type'][i]})
     with open('store/' + folder + '/zones.json', 'w') as outfile:
         json.dump(zones, outfile)
     return Response(status=200)
@@ -88,6 +95,7 @@ def saveScenario():
     d = request.get_json()
     data = d['scenario']
     folder = d['folder']
+    Path('store/' + folder).mkdir(parents=True, exist_ok=True)
     with open('store/' + folder + '/scenario.json', 'w') as outfile:
         json.dump(data, outfile)
     try:
@@ -100,6 +108,7 @@ def saveScenario():
 
 @app.route('/reinit_img', methods=['GET'])
 def reinit_img():
+    print('hfdafdafhello')
     try:
         copy2('screen.jpg', 'app/')
     except IOError:
@@ -145,4 +154,3 @@ def readScenario():
 def getProjectNames():
     names = os.listdir('store/')
     return jsonify(names)
-

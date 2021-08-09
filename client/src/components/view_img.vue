@@ -28,7 +28,35 @@
         </canvas>
       </b-col>
       <b-col class="my-accordion" role="tablist">
-        <b-button v-b-modal.modal-zones>
+      <b-row button v-for='(item, index) in startPosition.x' v-bind:key="item.id"
+          v-on:click='selectZone(index)'>
+        <b-card no-body class="mb-1">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block v-b-toggle="'accordion-' + index" variant="info">
+              Zone {{startPosition.id[index]}}</b-button>
+          </b-card-header>
+          <b-collapse :id="'accordion-' + index" accordion="my-accordion" role="tabpanel">
+            <b-card-body>
+              <b-row>
+                <b-col>
+                  <b-form-input v-model="startPosition.name[index]" v-on:change="selectZone(index)">
+                  </b-form-input>
+                </b-col>
+                <b-col>
+                  <b-form-select v-model="startPosition.type[index]" v-on:change="selectZone(index)"
+                                 :options="mode_options"></b-form-select>
+                </b-col>
+                <b-col>
+                  <b-form-select v-model="startPosition.z[index]" v-on:change="selectZone(index)"
+                                 :options="level_options"></b-form-select>
+                </b-col>
+              </b-row>
+              <b-button v-on:click="removeZone(index)">Remove zone</b-button>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+      </b-row>
+                <b-button v-b-modal.modal-zones>
           New zone</b-button>
         <b-modal v-model="doRects" id="modal-zones"
                  title="Using Component Methods" hide-header hide-footer>
@@ -57,34 +85,6 @@
             </b-col>
           </b-row>
         </b-modal>
-      <b-row button v-for='(item, index) in startPosition.x' v-bind:key="item.id"
-          v-on:click='selectZone(index)'>
-        <b-card no-body class="mb-1">
-          <b-card-header header-tag="header" class="p-1" role="tab">
-            <b-button block v-b-toggle="'accordion-' + index" variant="info">
-              Zone {{index}}</b-button>
-          </b-card-header>
-          <b-collapse :id="'accordion-' + index" accordion="my-accordion" role="tabpanel">
-            <b-card-body>
-              <b-row>
-                <b-col>
-                  <b-form-input v-model="startPosition.name[index]" v-on:change="selectZone(index)">
-                  </b-form-input>
-                </b-col>
-                <b-col>
-                  <b-form-select v-model="startPosition.type[index]" v-on:change="selectZone(index)"
-                                 :options="mode_options"></b-form-select>
-                </b-col>
-                <b-col>
-                  <b-form-select v-model="startPosition.z[index]" v-on:change="selectZone(index)"
-                                 :options="level_options"></b-form-select>
-                </b-col>
-              </b-row>
-              <b-button v-on:click="removeZone(index)">Remove zone</b-button>
-            </b-card-body>
-          </b-collapse>
-        </b-card>
-      </b-row>
       </b-col>
     </b-row>
     <b-row v-if="doScenario === false">
@@ -101,12 +101,12 @@
     </b-row>
     <b-card no-body>
       <b-tabs card pills>
-        <b-tab :title='`Step ` + index' button v-for='(item, index) in scenario.steps'
+        <b-tab :title='`Step ` + index + ` - ` +
+        scenario.steps[index].name' button v-for='(item, index) in scenario.steps'
                v-bind:key="index">
           <b-col>
             <b-form-input v-model="scenario.steps[index].name"
                           placeholder="Step name"></b-form-input>
-            <p>{{scenario.steps[index].name}}</p>
           </b-col>
           <b-row  button v-for='(item2, index2) in scenario.steps[index].operations'
                v-bind:key="index2">
@@ -130,12 +130,18 @@
                   Add operation</b-button>
             </b-col>
          </b-row>
+          <b-button size="sm" variant="danger" class="float-right"
+                    v-on:click="scenario.steps.splice(index,1)">
+            Close tab
+          </b-button>
         </b-tab>
+        <template #tabs-end>
+          <b-nav-item role="presentation"
+                      v-on:click="scenario.steps.push({operations: [], name: ''})"
+                      href="#"><b>Add step</b></b-nav-item>
+        </template>
       </b-tabs>
     </b-card>
-    <b-button v-on:click="scenario.steps.push({operations: [], name: ''})">
-      Add step
-    </b-button>
     </b-card>
   </b-container>
  </div>
@@ -188,6 +194,7 @@ export default {
         h: null,
       },
       startPosition: {
+        id: [],
         name: [],
         x: [],
         y: [],
@@ -237,19 +244,20 @@ export default {
           // eslint-disable-next-line
           console.error(error);
         });
-      axios.post(path2, { scenario: this.scenario, folder: this.nameProject })
+      axios.post(path2, { scenario: this.scenario, folder: this.nameProject }).then(() => {
+        if (this.reinit === true) {
+          axios.get(path3)
+            .catch((error) => {
+            // eslint-disable-next-line
+            console.error(error);
+            });
+          this.$router.push('/index');
+        }
+      })
         .catch((error) => {
           // eslint-disable-next-line
           console.error(error);
         });
-      if (this.reinit === true) {
-        axios.get(path3)
-          .catch((error) => {
-          // eslint-disable-next-line
-          console.error(error);
-          });
-        this.$router.push('/index');
-      }
     },
     selectZoneMouse(e) {
       this.canvas = document.querySelector('canvas');
@@ -276,18 +284,13 @@ export default {
       this.drawOldRects();
     },
     removeZone(i) {
-      this.startPosition.x.splice(i, i + 1);
-      this.startPosition.y.splice(i, i + 1);
-      this.startPosition.w.splice(i, i + 1);
-      this.startPosition.h.splice(i, i + 1);
-      this.startPosition.type.splice(i, i + 1);
-      this.startPosition.selected.splice(i, i + 1);
-      const path = 'http://localhost:5000/savezones';
-      axios.post(path, this.startPosition)
-        .catch((error) => {
-          // eslint-disable-next-line
-          console.error(error);
-        });
+      this.startPosition.id.splice(i, 1);
+      this.startPosition.x.splice(i, 1);
+      this.startPosition.y.splice(i, 1);
+      this.startPosition.w.splice(i, 1);
+      this.startPosition.h.splice(i, 1);
+      this.startPosition.type.splice(i, 1);
+      this.startPosition.selected.splice(i, 1);
       this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       this.ctx.drawImage(this.img1, 0, 0, this.widthCanvas,
         this.widthCanvas * (this.img1.height / this.img1.width));
@@ -314,7 +317,7 @@ export default {
               this.startPosition.w.push(v.W);
               this.startPosition.h.push(v.H);
               this.startPosition.z.push(v.Z)
-              this.startPosition.type.push((v.Zone));
+              this.startPosition.type.push((v.Type));
             }
           }
         /* eslint-enable */
@@ -423,6 +426,7 @@ export default {
         this.rect.w = Math.abs(this.rect.w);
       }
       if ((Math.abs(this.rect.w * this.rect.h > 40)) && (this.selectionMode)) {
+        this.startPosition.id.push(this.startPosition.name.length);
         this.startPosition.name.push(this.zoneName);
         this.startPosition.x.push(this.rect.startX);
         this.startPosition.y.push(this.rect.startY);
