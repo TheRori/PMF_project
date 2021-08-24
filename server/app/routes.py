@@ -14,6 +14,15 @@ class VideoCamera(object):
         self.video = cv2.VideoCapture(0)
 
     def __del__(self):
+        print('kill kill kill')
+        try:
+            self.video.release()
+        except:
+            print('probably there\'s no cap yet :(')
+        cv2.destroyAllWindows()
+
+    def release(self):
+        print('kill kill kill')
         try:
             self.video.release()
         except:
@@ -21,14 +30,17 @@ class VideoCamera(object):
         cv2.destroyAllWindows()
 
     def get_frame(self):
-        success, image = self.video.read()
-        ret, jpeg = cv2.imencode('.jpg', image)
+        success, frame = self.video.read()
+        if success:
+            frame = cv2.flip(frame, 1)
+        ret, jpeg = cv2.imencode('.jpg', frame)
         return jpeg.tobytes()
 
-    def take_picture(self):
-        _, frame = self.video.read()
-        cv2.imwrite('screen.jpg', frame)
-
+    def take_picture(self, name):
+        success, frame = self.video.read()
+        if success:
+            frame = cv2.flip(frame, 1)
+        cv2.imwrite(name + '.jpg', frame)
         return Response(status=200)
 
 
@@ -60,7 +72,15 @@ def video_feed():
 @app.route('/takeimage', methods=['POST', 'GET'])
 def takeimage():
     global cam
-    cam.take_picture()
+    cam.take_picture('screen')
+    del cam
+    return Response(status=200)
+
+
+@app.route('/takeimage2', methods=['POST', 'GET'])
+def takeimage2():
+    global cam
+    cam.take_picture('pos')
     del cam
     return Response(status=200)
 
@@ -92,6 +112,7 @@ def saveZones():
 
 @app.route('/save_scenario', methods=['POST'])
 def saveScenario():
+    global cam
     d = request.get_json()
     data = d['scenario']
     folder = d['folder']
@@ -154,3 +175,28 @@ def readScenario():
 def getProjectNames():
     names = os.listdir('store/')
     return jsonify(names)
+
+
+@app.route('/crop', methods=['GET', 'POST'])
+def crop():
+    d = request.get_json()
+    img = cv2.imread("pos.jpg")
+    print(d['y'], d['y'] + d['h'], d['x'], d['x'] + d['w'])
+    print(d['y'], d['h'], d['x'], d['w'])
+    crop_img = img[int(d['y']):int(d['y']) + int(d['h']), int(d['x']):int(d['x'] + d['w'])]
+    cv2.imwrite("cropped.jpg", crop_img)
+    return Response(status=200)
+
+
+@app.route('/save_crop', methods=['GET', 'POST'])
+def saveCrop():
+    d = request.get_json()
+    folder = d['folder']
+    file = d['file']
+    try:
+        copy2('cropped.jpg', 'store/' + folder)
+    except IOError:
+        os.chmod('app/', 777)  # ?? still can raise exception
+        copy2('cropped.jpg', 'store/' + folder)
+    os.rename('store/' + folder + '/cropped.jpg', 'store/' + folder + '/' + file + '.jpg')
+    return Response(status=200)

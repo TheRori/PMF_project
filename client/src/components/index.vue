@@ -8,7 +8,9 @@
       </b-row>
       <b-row>
         <b-col>
-          <router-link class="main_menu_option" to="/stream">Create a scenario</router-link> <br>
+          <router-link class="main_menu_option"
+                       :to="{ name: 'Stream', params: { type: 'normal', project: 'None' }}">
+            Create a scenario</router-link> <br>
         </b-col>
         <b-col>
           <p class="main_menu_option"

@@ -56,7 +56,7 @@
           </b-collapse>
         </b-card>
       </b-row>
-                <b-button v-b-modal.modal-zones>
+        <b-button v-b-modal.modal-zones>
           New zone</b-button>
         <b-modal v-model="doRects" id="modal-zones"
                  title="Using Component Methods" hide-header hide-footer>
@@ -117,6 +117,14 @@
             <b-col>
               <b-form-select v-model="scenario.steps[index].operations[index2].action"
                              :options="action_options"></b-form-select>
+              <router-link v-if="scenario.steps[index].operations[index2].action === 'control'"
+                           @click.native="saveZones"
+                           :to="{ name: 'Stream',
+                           params:{ type: 'pos', project: nameProject, pos: index + '_' + index2}}">
+                Make new reference picture
+<!--                eslint-disable-next-line-->
+                <img :src=returnUrlPosImg(nameProject,index,index2)>
+              </router-link>
             </b-col>
             <b-col>
               <b-form-select v-model="scenario.steps[index].operations[index2].zone"
@@ -155,6 +163,7 @@ export default {
   name: 'view_img',
   data() {
     return {
+      pos_pic: null,
       zoneMode: null,
       zoneName: null,
       mode_options: [
@@ -225,6 +234,27 @@ export default {
     });
   },
   methods: {
+    returnUrlPosImg(folder, i, ii) {
+      console.log(i.toString());
+      console.log(ii.toString());
+      // eslint-disable-next-line
+      let str = `../../../server/store/${folder}/${i.toString()}_${ii.toString()}.jpg`;
+      try {
+        // eslint-disable-next-line
+        return require(`../../../server/store/${folder}/${i.toString()}_${ii.toString()}.jpg`);
+      } catch (e) {
+        const path1 = 'http://localhost:5000/save_crop';
+        axios.post(path1, {
+          folder: this.nameProject, file: `${i}_${ii}`,
+        })
+          .catch((error) => {
+            // eslint-disable-next-line
+          console.error(error);
+          });
+        // eslint-disable-next-line
+       return 'null';
+      }
+    },
     showModalSave() {
       if (this.saved === false) {
         this.$root.$emit('bv::show::modal', 'modal-save', '#back-save');
@@ -445,6 +475,7 @@ export default {
         this.nameProject = this.$route.params.load;
         this.saved = true;
         this.readZones();
+        this.doScenario = true;
         this.readScenario();
         axios.get(path, { params: { folder: this.$route.params.load } })
           .catch((error) => {
