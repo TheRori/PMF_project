@@ -371,6 +371,7 @@ export default {
           for (const [key,value] of Object.entries(d)) {
             for (const [k,v] of Object.entries(value)) {
               this.startPosition.name.push(v.name);
+              this.startPosition.id.push(v.ID);
               this.startPosition.x.push(v.x1);
               this.startPosition.y.push(v.y1);
               this.startPosition.w.push(v.x2);

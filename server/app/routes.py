@@ -114,8 +114,8 @@ def saveZones():
     for i in range(len(data['x'])):
         z1_curr = z1[data['z'][i]]
         z2_curr = z2[data['z'][i]]
-        zones['zone'].append({'ID': i, 'name': data['name'][i], 'x': int(data['x1'][i]),
-                              'y': int(data['y1'][i]), 'x2': int(data['w'][i]), 'y2': int(data['h'][i]), 'Lvl': data['z'][i],
+        zones['zone'].append({'ID': i, 'name': data['name'][i], 'x1': int(data['x'][i]),
+                              'y1': int(data['y'][i]), 'x2': int(data['w'][i]), 'y2': int(data['h'][i]), 'Lvl': data['z'][i],
                               'z1': z1_curr, 'z2': z2_curr, 'type': data['type'][i]})
     with open('store/' + folder + '/zones.json', 'w') as outfile:
         json.dump(zones, outfile)
