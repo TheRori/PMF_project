@@ -29,17 +29,27 @@ class VideoCamera(object):
             print('probably there\'s no cap yet :(')
         cv2.destroyAllWindows()
 
-    def get_frame(self):
+    def get_frame(self, is_crop='False'):
         success, frame = self.video.read()
         if success:
-            frame = cv2.flip(frame, 1)
+            frame = cv2.flip(frame, -1)
+            with open('app/static/settings.json') as json_file:
+                dd = json.load(json_file)
+            if is_crop == 'True':
+                d = dd['crop']
+                frame = frame[int(d['y']):int(d['y']) + int(d['h']), int(d['x']):int(d['x'] + d['w'])]
         ret, jpeg = cv2.imencode('.jpg', frame)
         return jpeg.tobytes()
 
-    def take_picture(self, name):
+    def take_picture(self, name, is_crop=False):
         success, frame = self.video.read()
         if success:
-            frame = cv2.flip(frame, 1)
+            frame = cv2.flip(frame, -1)
+        if is_crop:
+            with open('app/static/settings.json') as json_file:
+                dd = json.load(json_file)
+            d = dd['crop']
+            frame = frame[int(d['y']):int(d['y']) + int(d['h']), int(d['x']):int(d['x'] + d['w'])]
         cv2.imwrite(name + '.jpg', frame)
         return Response(status=200)
 
@@ -53,9 +63,9 @@ def index():
     return 'hello pmf'
 
 
-def gen(camera):
+def gen(camera, is_crop='False'):
     while True:
-        frame = camera.get_frame()
+        frame = camera.get_frame(is_crop)
         # Use generator function to output video stream, the content type of each request output is image/jpeg
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
@@ -64,8 +74,10 @@ def gen(camera):
 @app.route('/video_feed', methods=['GET'])
 def video_feed():
     global cam
+    d = request.args.get('crop', default='False')
+    print(d)
     cam = VideoCamera()
-    return Response(gen(cam),
+    return Response(gen(cam,d),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -80,7 +92,7 @@ def takeimage():
 @app.route('/takeimage2', methods=['POST', 'GET'])
 def takeimage2():
     global cam
-    cam.take_picture('pos')
+    cam.take_picture('pos', True)
     del cam
     return Response(status=200)
 
@@ -102,9 +114,9 @@ def saveZones():
     for i in range(len(data['x'])):
         z1_curr = z1[data['z'][i]]
         z2_curr = z2[data['z'][i]]
-        zones['zone'].append({'ID': i, 'Name': data['name'][i], 'X': data['x'][i],
-                              'Y': data['y'][i], 'W': data['w'][i], 'H': data['h'][i], 'Lvl': data['z'][i],
-                              'Z1': z1_curr, 'Z2': z2_curr, 'Type': data['type'][i]})
+        zones['zone'].append({'ID': i, 'name': data['name'][i], 'x': int(data['x1'][i]),
+                              'y': int(data['y1'][i]), 'x2': int(data['w'][i]), 'y2': int(data['h'][i]), 'Lvl': data['z'][i],
+                              'z1': z1_curr, 'z2': z2_curr, 'type': data['type'][i]})
     with open('store/' + folder + '/zones.json', 'w') as outfile:
         json.dump(zones, outfile)
     return Response(status=200)
@@ -129,7 +141,6 @@ def saveScenario():
 
 @app.route('/reinit_img', methods=['GET'])
 def reinit_img():
-    print('hfdafdafhello')
     try:
         copy2('screen.jpg', 'app/')
     except IOError:
@@ -144,7 +155,7 @@ def reinit_img():
 @app.route('/load_img', methods=['GET'])
 def load_img():
     folder = request.args.get('folder', '')
-    print(folder)
+    print('sdsafdasfdasdsadadsad',folder)
     os.remove('screen.jpg')
     try:
         copy2('store/' + folder + '/screen.jpg', os.curdir)
@@ -179,12 +190,30 @@ def getProjectNames():
 
 @app.route('/crop', methods=['GET', 'POST'])
 def crop():
+    global cam
     d = request.get_json()
     img = cv2.imread("pos.jpg")
-    print(d['y'], d['y'] + d['h'], d['x'], d['x'] + d['w'])
-    print(d['y'], d['h'], d['x'], d['w'])
-    crop_img = img[int(d['y']):int(d['y']) + int(d['h']), int(d['x']):int(d['x'] + d['w'])]
-    cv2.imwrite("cropped.jpg", crop_img)
+    cam = VideoCamera()
+    return Response(gen(cam,d),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/save_pos_zone', methods=['GET', 'POST'])
+def savePosZone():
+    d = request.get_json()
+    # print(d)
+    # data = {'crop': []}
+    # data['crop'].append({
+    #     "y": d['y'],
+    #     "x": d['x'],
+    #     "w": d['w'],
+    #     "h": d['h']
+    # })
+    with open('app/static/settings.json', 'r') as f:
+        json_data = json.load(f)
+        json_data['crop'] = {"y": int(d['y']), "x": int(d['x']), "w": int(d['w']), "h": int(d['h'])}
+    with open('app/static/settings.json', 'w') as outfile:
+        json.dump(json_data, outfile)
     return Response(status=200)
 
 
@@ -194,9 +223,36 @@ def saveCrop():
     folder = d['folder']
     file = d['file']
     try:
-        copy2('cropped.jpg', 'store/' + folder)
+        copy2('pos.jpg', 'store/' + folder)
     except IOError:
         os.chmod('app/', 777)  # ?? still can raise exception
-        copy2('cropped.jpg', 'store/' + folder)
-    os.rename('store/' + folder + '/cropped.jpg', 'store/' + folder + '/' + file + '.jpg')
+        copy2('pos.jpg', 'store/' + folder)
+    os.rename('store/' + folder + '/pos.jpg', 'store/' + folder + '/' + file + '.jpg')
+    return Response(status=200)
+
+
+@app.route('/save_zone_control', methods=['GET', 'POST'])
+def saveZoneCtrl():
+    d = request.get_json()
+    data = d['zone']
+    folder = d['folder']
+    file = d['file']
+    step = d['step']
+    Path('store/' + folder).mkdir(parents=True, exist_ok=True)
+    zones = {'zone': []}
+    with open('store/' + folder + '/scenario.json', 'r') as infile:
+        json_data = json.load(infile)
+        for idx,j in enumerate(json_data['steps']):
+            if j['name'] == step:
+                print(json_data['steps'][idx])
+                for idx2,o in enumerate(j['operations']):
+                    if o['name'] == file:
+                        json_data['steps'][idx]['operations'][idx2] = \
+                            {'zone': 1, 'action': 'control', 'name': 'dasdsadss', 'ref_imgs':
+                                'store/' + folder + '/' + file + '.jpg', 'control_zones': [
+                                {'ID': '0', 'x1': data['x1'],
+                                 'y1': data['y1'], 'x2': data['x1'] + data['x2'], 'y2':data['y1'] + data['y2']}
+                      ] }
+    with open('store/' + folder + '/scenario.json', 'w') as outfile:
+        json.dump(json_data, outfile)
     return Response(status=200)

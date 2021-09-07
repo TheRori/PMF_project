@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+import createScenario from '../components/create_scenario.vue';
 import stream from '../components/stream.vue';
 import Index from '../components/index.vue';
 import ViewImg from '../components/view_img.vue';
@@ -15,7 +16,12 @@ const routes = [
     alias: '/index',
   },
   {
-    path: '/stream/:type/:project/:pos',
+    path: '/scenario/:load',
+    name: 'Create_Scenario',
+    component: createScenario,
+  },
+  {
+    path: '/stream/:type/:project/:step/:pos',
     name: 'Stream',
     component: stream,
   },
@@ -25,7 +31,7 @@ const routes = [
     component: posImg,
   },
   {
-    path: '/view_img/:load',
+    path: '/view_img/:load/:mode',
     name: 'View_Img',
     component: ViewImg,
   },

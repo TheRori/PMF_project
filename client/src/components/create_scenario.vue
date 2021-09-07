@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <b-navbar type="dark" variant="dark">
+<div>
+      <b-navbar type="dark" variant="dark">
       <b-navbar-nav>
       <b-navbar-brand class="mx-3" href="#">PMF Vision</b-navbar-brand>
       <!-- Navbar dropdowns -->
@@ -14,104 +14,106 @@
       </b-nav-item-dropdown>
       </b-navbar-nav>
       <b-navbar-nav right class="ml-auto">
-                <b-button class="float-right mr-3" ref="back-save"
-                  v-on:click="saveZones(); $router.push({ name: 'Create_Scenario',
-                  params: { load: nameProject, mode: 'normal' }});">
-                  Go to scenario creation</b-button>
+        <b-button class="float-right mr-3" ref="back-save"
+                  v-on:click="saveZones(); $router.push({ name: 'View_Img',
+                  params: { load: nameProject }});">
+                  Go to zones creation</b-button>
         <b-button class="float-right" ref="back-save"
                   v-on:click="reinit = true; showModalSave();">Save and Back home</b-button>
       </b-navbar-nav>
     </b-navbar>
   <b-container class="content_ui">
-    <b-row class="mb-3 mt-2 mx-auto">
-      <b-col class="mx-auto">
-      <h3 class="mx-auto">Do a scenario – Make the zones</h3>
+    <b-row>
+      <b-col>
+        <h3>Do a scenario – Create the steps</h3>
       </b-col>
     </b-row>
     <b-row>
       <b-col>
-        <canvas v-bind:class="{ do_rects: doRects }" id='canvas' ref='select' v-on="doRects ?
-        { mousedown: startSelect, mousemove: drawRect, mouseup: stopSelect } :
-        {mousedown: selectZoneMouse}">
+        <canvas id='canvas' ref="select">
         </canvas>
       </b-col>
-      <b-col class="my-accordion" role="tablist">
-      <b-row button v-for='(item, index) in startPosition.x' v-bind:key="item.id"
-          v-on:click='selectZone(index)'>
-        <b-card no-body class="mb-1">
-          <b-card-header header-tag="header" class="p-1" role="tab">
-            <b-button block v-b-toggle="'accordion-' + index" variant="info">
-              Zone {{startPosition.id[index]}}</b-button>
-          </b-card-header>
-          <b-collapse :id="'accordion-' + index" accordion="my-accordion" role="tabpanel">
-            <b-card-body>
-              <b-row>
-                <b-col>
-                  <b-form-input v-model="startPosition.name[index]" v-on:change="selectZone(index)">
-                  </b-form-input>
-                </b-col>
-                <b-col>
-                  <b-form-select v-model="startPosition.type[index]" v-on:change="selectZone(index)"
-                                 :options="mode_options"></b-form-select>
-                </b-col>
-                <b-col>
-                  <b-form-select v-model="startPosition.z[index]" v-on:change="selectZone(index)"
-                                 :options="level_options"></b-form-select>
-                </b-col>
-              </b-row>
-              <b-button v-on:click="removeZone(index)">Remove zone</b-button>
-            </b-card-body>
-          </b-collapse>
-        </b-card>
-      </b-row>
-        <b-button v-b-modal.modal-zones>
-          New zone</b-button>
-        <b-modal v-model="doRects" id="modal-zones"
-                 title="Using Component Methods" hide-header hide-footer>
-          <b-row>
-            <b-col>
-              <b-form-input v-if="doRects" v-model="zoneName" :class="status($v.zoneName)"
-                            placeholder="Zone name"></b-form-input>
-              <b-row>
-                <div class="error" v-if="!$v.zoneName.required">Field is required</div>
-              </b-row>
-            </b-col>
-            <b-col>
-              <b-form-select v-if="doRects" v-model="zoneMode" :class="status($v.zoneMode)"
-                             :options="mode_options"></b-form-select>
-              <b-row>
-                <div class="error" v-if="!$v.zoneMode.required">Field is required</div>
-              </b-row>
-            </b-col>
-            <b-col>
-              <b-form-select v-if="doRects" v-model="level" :class="status($v.level)"
-                             :options="level_options"></b-form-select>
-              <b-row>
-                <div class="error" v-if="!$v.level.required">Field is required</div>
-              </b-row>
-            </b-col>
-          </b-row>
-          <b-row>
-            <b-col>
-              <b-button variant="outline-danger" block @click="hideModal(true)">
-                Cancel</b-button>
-            </b-col>
-            <b-col>
-              <b-button variant="outline-warning"
-                        block v-on:click="hideModal(); doRects = true;">OK</b-button>
-            </b-col>
-          </b-row>
-        </b-modal>
-      </b-col>
     </b-row>
+    <b-row v-if="doScenario === false">
+      <b-button v-on:click="doScenario = true">
+        Create a new Scenario
+      </b-button>
+    </b-row>
+    <b-card v-if="doScenario">
     <b-row>
-      <b-col class="ml-2">
-        <b-button v-on:click="saveZones(); $router.push({ name: 'Stream',
-        params: { type: 'retake', project: nameProject }});">Take another image</b-button>
+      <b-col>
+        <b-form-input v-model="scenario.name" placeholder="Scenario name"
+                    :value=item></b-form-input>
       </b-col>
     </b-row>
+    <b-card no-body>
+      <b-tabs card pills v-model="tabActive" @changed="onTabChanged">
+        <b-tab :title='`Step ` + index + ` - ` +
+        scenario.steps[index].name' button v-for='(item, index) in scenario.steps'
+               v-bind:key="index">
+          <b-col>
+            <b-form-input v-model="scenario.steps[index].name"
+                          placeholder="Step name"></b-form-input>
+            <b-row>
+              </b-row>
+          </b-col>
+          <b-row  button v-for='(item2, index2) in scenario.steps[index].operations'
+               v-bind:key="index2">
+            <b-col>
+              <b-form-input v-model="scenario.steps[index].operations[index2].name"
+                            placeholder="Operation name" :value=item2></b-form-input>
+              <p v-if="scenario.steps[index].operations[index2].name === ''">
+                This field is required</p>
+            </b-col>
+            <b-col>
+              <b-form-select v-model="scenario.steps[index].operations[index2].action"
+                             :options="action_options"></b-form-select>
+              <p v-if="scenario.steps[index].operations[index2].action === ''">
+                This field is required</p>
+              <router-link v-if="scenario.steps[index].operations[index2].action === 'control'"
+                           @click.native="saveZones(),
+                           savePosZone(scenario.steps[index].operations[index2].zone,
+                           scenario.steps[index].name)"
+                           :to="{ name: 'Stream',
+                           params:{ type: 'pos', project: nameProject,
+                           step: scenario.steps[index].name,
+                           pos: scenario.steps[index].operations[index2].name }}">
+                Make new reference picture
+<!--                eslint-disable-next-line-->
+                <img :src=returnUrlPosImg(nameProject,scenario.steps[index].operations[index2].name)>
+              </router-link>
+            </b-col>
+            <b-col>
+              <b-form-select v-model="scenario.steps[index].operations[index2].zone"
+                             :options="startPosition.id"><option v-bind:value= "''" >
+                Choose a zone</option></b-form-select>
+              <p v-if="scenario.steps[index].operations[index2].zone === ''">
+                This field is required</p>
+            </b-col>
+          </b-row>
+          <b-row class="float-start">
+            <b-col>
+              <b-button v-if="scenario.steps[index].name !== ''"
+                        v-on:click="scenario.steps[index].operations.push(
+                {zone: '', action: '', name: ''})">
+                  Add operation</b-button>
+            </b-col>
+         </b-row>
+          <b-button size="sm" variant="danger" class="float-right"
+                    v-on:click="scenario.steps.splice(index,1)">
+            Remove step
+          </b-button>
+        </b-tab>
+        <template #tabs-end>
+          <b-nav-item role="presentation"
+                      v-on:click="scenario.steps.push({operations: [], name: ''});tabs = tabs + 1"
+                      href="#"><b>Add step</b></b-nav-item>
+        </template>
+      </b-tabs>
+    </b-card>
+    </b-card>
   </b-container>
- </div>
+</div>
 </template>
 
 <script>
@@ -120,14 +122,16 @@ import { required } from 'vuelidate/lib/validators';
 import myImg from '../../../server/screen.jpg';
 
 export default {
-  name: 'view_img',
+  name: 'create_scenario',
   data() {
     return {
+      tabActive: 0,
+      tabs: [],
       pos_pic: null,
       zoneMode: null,
       zoneName: null,
       mode_options: [
-        { value: null, text: 'Choose a type' },
+        { value: null, text: 'Default' },
         { value: 'assembly', text: 'Assembly' },
         { value: 'collect', text: 'Collect' },
         { value: 'display', text: 'Display' },
@@ -140,7 +144,7 @@ export default {
         { value: 2, text: 'Third level' },
       ],
       action_options: [
-        { value: null, text: 'Choose an action' },
+        { value: '', text: 'Choose an action' },
         { value: 'pick', text: 'pick' },
         { value: 'place', text: 'place' },
         { value: 'control', text: 'control' },
@@ -190,26 +194,58 @@ export default {
     };
   },
   validations: {
-    zoneMode: {
-      required,
-    },
-    zoneName: {
-      required,
-    },
-    level: {
-      required,
+    scenario: {
+      steps: {
+        $each: {
+          name: {
+            required,
+          },
+        },
+      },
     },
   },
   created() {
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'c') {
+        this.changeType('check');
+      }
+      if (e.key === 'a') {
+        this.changeType('action');
+      }
+    });
   },
   methods: {
+    convertCoordForJson() {
+      for (let j = 0; j < this.startPosition.x.length; j += 1) {
+        this.startPosition.y[j] *= (this.img1.height / (this.widthCanvas * 0.5625));
+        this.startPosition.x[j] *= (this.img1.width / this.widthCanvas);
+        this.startPosition.w[j] = this.startPosition.x[j]
+          + this.startPosition.w[j] * (this.img1.width / this.widthCanvas);
+        this.startPosition.h[j] = this.startPosition.y[j]
+          + this.startPosition.h[j] * (this.img1.height / (this.widthCanvas * 0.5625));
+      }
+    },
+    convertCoordForCanvas() {
+      for (let j = 0; j < this.startPosition.x.length; j += 1) {
+        this.startPosition.y[j] /= (this.img1.height / (this.widthCanvas * 0.5625));
+        this.startPosition.x[j] /= (this.img1.width / this.widthCanvas);
+        this.startPosition.w[j] = this.startPosition.w[j]
+          / (this.img1.width / this.widthCanvas) - this.startPosition.x[j];
+        this.startPosition.h[j] = this.startPosition.h[j]
+          / (this.img1.height / (this.widthCanvas * 0.5625)) - this.startPosition.y[j];
+      }
+      console.log(this.startPosition);
+    },
+    onTabChanged() {
+      this.tabActive = this.tabs.length;
+    },
     status(validation) {
       return {
         error: validation.$error,
         dirty: validation.$dirty,
       };
     },
-    savePosZone(id, step) {
+    savePosZone(id) {
       this.crop.y = this.startPosition.y[id] * (this.img1.height / (this.widthCanvas * 0.5625));
       this.crop.x = this.startPosition.x[id] * (this.img1.width / this.widthCanvas);
       this.crop.w = this.startPosition.w[id] * (this.img1.width / this.widthCanvas);
@@ -221,7 +257,6 @@ export default {
         y: this.crop.y,
         w: this.crop.w,
         h: this.crop.h,
-        steps: step,
       })
         .catch((error) => {
           // eslint-disable-next-line
@@ -254,35 +289,8 @@ export default {
         this.saveZones();
       }
     },
-    hideModal(cancel = false) {
-      this.$v.$touch();
-      if (this.$v.$invalid && cancel === false) {
-        this.submitStatus = 'ERROR';
-      } else if (cancel === true) {
-        this.$bvModal.hide('modal-zones');
-      } else {
-        this.$bvModal.hide('modal-zones');
-      }
-    },
-    convertCoordForJson() {
-      for (let j = 0; j < this.startPosition.x.length; j += 1) {
-        this.startPosition.y[j] *= (this.img1.height / (this.widthCanvas * 0.5625));
-        this.startPosition.x[j] *= (this.img1.width / this.widthCanvas);
-        this.startPosition.w[j] = this.startPosition.x[j]
-          + this.startPosition.w[j] * (this.img1.width / this.widthCanvas);
-        this.startPosition.h[j] = this.startPosition.y[j]
-          + this.startPosition.h[j] * (this.img1.height / (this.widthCanvas * 0.5625));
-      }
-    },
-    convertCoordForCanvas() {
-      for (let j = 0; j < this.startPosition.x.length; j += 1) {
-        this.startPosition.y[j] /= (this.img1.height / (this.widthCanvas * 0.5625));
-        this.startPosition.x[j] /= (this.img1.width / this.widthCanvas);
-        this.startPosition.w[j] = this.startPosition.w[j]
-          / (this.img1.width / this.widthCanvas) - this.startPosition.x[j];
-        this.startPosition.h[j] = this.startPosition.h[j]
-          / (this.img1.height / (this.widthCanvas * 0.5625)) - this.startPosition.y[j];
-      }
+    hideModal() {
+      this.$bvModal.hide('modal-zones');
     },
     saveZones() {
       const path1 = 'http://localhost:5000/savezones';
@@ -341,7 +349,6 @@ export default {
       this.startPosition.w.splice(i, 1);
       this.startPosition.h.splice(i, 1);
       this.startPosition.type.splice(i, 1);
-      this.startPosition.z.splice(i, 1);
       this.startPosition.selected.splice(i, 1);
       this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       this.ctx.drawImage(this.img1, 0, 0, this.widthCanvas,
@@ -373,7 +380,7 @@ export default {
             }
           }
           this.convertCoordForCanvas();
-          /* eslint-enable */
+        /* eslint-enable */
           this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
           this.ctx.drawImage(this.img1, 0, 0, this.widthCanvas,
             this.widthCanvas * (this.img1.height / this.img1.width));
@@ -487,30 +494,21 @@ export default {
         this.startPosition.type.push(this.zoneMode);
         this.startPosition.selected.push(false);
       }
-      this.zoneName = null;
-      this.zoneMode = null;
-      this.level = null;
       this.selectionMode = false;
       this.doRects = false;
-      console.log(this.startPosition.z);
     },
     checkImg() {
-      if (this.$route.params.load !== 'None') {
-        console.log(this.$route.params.load);
-        const path = 'http://localhost:5000/load_img';
-        this.nameProject = this.$route.params.load;
-        this.saved = true;
-        this.readZones();
-        this.doScenario = true;
-        this.readScenario();
-        if (this.$route.params.mode !== 'retake') {
-          axios.get(path, { params: { folder: this.$route.params.load } })
-            .catch((error) => {
-            // eslint-disable-next-line
-            console.error(error);
-            });
-        }
-      }
+      const path = 'http://localhost:5000/load_img';
+      this.nameProject = this.$route.params.load;
+      this.saved = true;
+      this.readZones();
+      this.doScenario = true;
+      this.readScenario();
+      axios.get(path, { params: { folder: this.$route.params.load } })
+        .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        });
     },
   },
   mounted() {
